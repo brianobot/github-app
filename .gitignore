@@ -1,3 +1,6 @@
 venv/
 .env
 brian-obot-test-github-app.2024-01-29.private-key.pem
+all-followers.txt
+all-followings.txt
+not-following-back.txt
