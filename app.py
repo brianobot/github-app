@@ -6,7 +6,6 @@ env = environ.Env()
 environ.Env.read_env()
 
 ACCESS_TOKEN = env("GITHUB_ACCESS_TOKEN")
-ACCESS_TOKEN = "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"
 
 
 def get_headers() -> dict:
