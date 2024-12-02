@@ -3,7 +3,7 @@ import environ
 from functools import partial
 
 env = environ.Env()
-environ.Env.read_env()
+env.read_env(".env")#, overwrite=True)
 
 ACCESS_TOKEN = env("GITHUB_ACCESS_TOKEN")
 
@@ -32,18 +32,23 @@ def get_profile_url(profile_name: str) -> str:
 
 
 def get_all(
-    func: callable, params: dict, key: list[str] = ["login", "followers_url"]
+    func: callable, 
+    params: dict, 
+    key: list[str] = ["login", "followers_url"]
 ) -> list:
-    page = valid = True
+    page = is_valid = True
     attrs = []
-    while valid:
-        attr = func(params={**params, "page": page})
+    while is_valid:
+        attr: dict = func(params={**params, "page": page})
+        if isinstance(attr, dict):
+            if attr.get("message") == "Bad credentials":
+                raise ValueError("Bad Credentials")
         new_attr = [
             f"{each['login']}:{get_profile_url(each['login'])}" for each in attr
         ]
         attrs.extend(new_attr)
         if len(attr) < params.get("per_page", 30):
-            valid = False
+            is_valid = False
 
         print(f"Page {int(page)} - Length: {len(new_attr)}")
         page += 1
