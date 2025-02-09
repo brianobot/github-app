@@ -3,7 +3,7 @@ import environ
 from functools import partial
 
 env = environ.Env()
-env.read_env(".env")#, overwrite=True)
+env.read_env(".env") #, overwrite=True)
 
 ACCESS_TOKEN = env("GITHUB_ACCESS_TOKEN")
 
