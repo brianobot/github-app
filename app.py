@@ -23,6 +23,12 @@ def get_user_attribute(attr: str, params: dict | None = None) -> dict[str, str]:
     return response.json()
 
 
+def get_user_repositories(owner: str, params: dict | None = None) -> dict[str, str]:
+    url = f"https://api.github.com/repos/{owner}"
+    response = requests.get(url, headers=get_headers(), params=params)
+    return response.json()
+
+
 def check_rate_limit() -> dict[str, str]:
     url = "https://api.github.com/rate_limit"
     response = requests.get(url, headers=get_headers())
@@ -79,7 +85,7 @@ def compare_files(file1: str, file2: str):
 def main():
     get_followers_func = partial(get_user_attribute, "followers")
     get_followings_func = partial(get_user_attribute, "following")
-    # get_public_repositories = partial(get_user_attribute, "repos")
+    # get_public_repositories = partial(get_user_repositories, "brianobot")
 
     all_followers = get_all(get_followers_func, params={"per_page": 100})
     all_followings = get_all(get_followings_func, params={"per_page": 100})
@@ -88,8 +94,8 @@ def main():
     diffs = set((tuple(item.items()) for item in all_followings)) - set(
         (tuple(item.items()) for item in all_followers)
     )
-    write_to_file(list(diffs), "not-following-back")
 
+    write_to_file(list(diffs), "not-following-back")
     print("⏲️ Rate Limit: ", check_rate_limit())
 
 
