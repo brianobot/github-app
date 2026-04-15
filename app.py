@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Callable
 
 import environ
@@ -35,33 +36,35 @@ def get_profile_url(profile_name: str) -> str:
 def get_all(
     func: Callable, params: dict, key: list[str] = ["login", "followers_url"]
 ) -> list:
-    page = is_valid = True
+    page = is_valid = 1
     attrs = []
     while is_valid:
         attr: dict = func(params={**params, "page": page})
+
         if isinstance(attr, dict):
             if attr.get("message") == "Bad credentials":
                 raise ValueError("Bad Credentials")
 
         new_attr = []
         for single_attr in attr:
-            key = single_attr.get("login", single_attr["owner"])
-            value = get_profile_url(single_attr.get("login", single_attr["owner"]))
-            new_attr.append({f"{key}": value})
+            _key = single_attr.get(key[0])
+            _value = get_profile_url(single_attr.get(key[0]))
+            new_attr.append({f"{_key}": _value})
 
         attrs.extend(new_attr)
         if len(attr) < params.get("per_page", 30):
             is_valid = False
 
         print(f"Page {int(page)} - Length: {len(new_attr)}")
-        page += 1  # type: ignore
+        page += 1
+
     return attrs
 
 
-def write_to_file(attrs: list, filename: str) -> int:
+def write_to_file(attrs: list[tuple[str, str]], filename: str) -> int:
     with open(f"data/{filename}.txt", "w") as file:
-        for name in attrs:
-            file.write(name + "\n")
+        for attr in attrs:
+            file.write(f"{attr}" + "\n")
         file_no = file.fileno()
     return file_no
 
@@ -74,16 +77,18 @@ def compare_files(file1: str, file2: str):
 
 
 def main():
-    # get_followers_func = partial(get_user_attribute, "followers")
-    # get_followings_func = partial(get_user_attribute, "following")
+    get_followers_func = partial(get_user_attribute, "followers")
+    get_followings_func = partial(get_user_attribute, "following")
     # get_public_repositories = partial(get_user_attribute, "repos")
 
-    # all_followers = get_all(get_followers_func, params={"per_page": 100})
-    # all_followings = get_all(get_followings_func, params={"per_page": 100})
+    all_followers = get_all(get_followers_func, params={"per_page": 100})
+    all_followings = get_all(get_followings_func, params={"per_page": 100})
     # all_repositories = get_all(get_public_repositories, params={"per_page": 100})
 
-    # diffs = set(all_followings) - set(all_followers)
-    # write_to_file(list(diffs), "not-following-back")
+    diffs = set((tuple(item.items()) for item in all_followings)) - set(
+        (tuple(item.items()) for item in all_followers)
+    )
+    write_to_file(list(diffs), "not-following-back")
 
     print("⏲️ Rate Limit: ", check_rate_limit())
 
